@@ -71,13 +71,13 @@ The most critical challenge in this application is preventing **overselling** �
 
 When a `POST /orders` request arrives, we use **pessimistic row-level locking** within a database transaction:
 
-1. **Begin Transaction** — All operations are wrapped in a single PostgreSQL transaction.
-2. **Lock Product Rows** — We execute `SELECT ... FOR UPDATE` on all product rows in the cart. This acquires an exclusive row-level lock in PostgreSQL, meaning any other transaction trying to read or modify these rows will **wait** until our transaction completes.
-3. **Validate Stock** — With the rows locked, we check that sufficient stock exists for every item. If any item fails, we roll back the **entire** transaction — no partial orders, no partial stock changes.
-4. **Decrement & Commit** — If all validations pass, we decrement stock, create the order, and commit. Only then are the locks released.
-5. **Deadlock Prevention** — Product rows are always locked in a consistent order (sorted by product ID), preventing circular wait conditions.
+1. **Begin Transaction** : All operations are wrapped in a single PostgreSQL transaction.
+2. **Lock Product Rows** : We execute `SELECT ... FOR UPDATE` on all product rows in the cart. This acquires an exclusive row-level lock in PostgreSQL, meaning any other transaction trying to read or modify these rows will **wait** until our transaction completes.
+3. **Validate Stock** : With the rows locked, we check that sufficient stock exists for every item. If any item fails, we roll back the **entire** transaction — no partial orders, no partial stock changes.
+4. **Decrement & Commit** : If all validations pass, we decrement stock, create the order, and commit. Only then are the locks released.
+5. **Deadlock Prevention** : Product rows are always locked in a consistent order (sorted by product ID), preventing circular wait conditions.
 
-This strategy is simple, proven, and leverages PostgreSQL's battle-tested concurrency primitives. It trades a small amount of throughput (due to lock contention) for **absolute correctness** — exactly the right trade-off for an inventory system.
+This strategy is simple, proven, and leverages PostgreSQL's battle-tested concurrency primitives. It trades a small amount of throughput (due to lock contention) for **absolute correctness**  exactly the right trade-off for an inventory system.
 
 ---
 
