@@ -18,6 +18,8 @@ Built with **NestJS + TypeORM + PostgreSQL**, containerized with **Docker**.
 git clone <repository-url>
 cd oont-grocery-api
 
+#Add .env based on .env.example file
+
 # 2. Start everything (NestJS API + PostgreSQL)
 docker-compose up --build
 
