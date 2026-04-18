@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: oont-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: oont_user
+      POSTGRES_PASSWORD: oont_password_123
+      POSTGRES_DB: oont_grocery
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U oont_user -d oont_grocery']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oont-api
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: oont_user
+      DB_PASSWORD: oont_password_123
+      DB_DATABASE: oont_grocery
+      PORT: 3000
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # One-off service to seed the database after the API is running
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oont-seed
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USERNAME: oont_user
+      DB_PASSWORD: oont_password_123
+      DB_DATABASE: oont_grocery
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ['node', 'dist/database/seed.js']
+    profiles:
+      - seed
+
+volumes:
+  pgdata:
